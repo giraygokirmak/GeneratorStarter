@@ -15,8 +15,12 @@ bool contactorState = HIGH;  // Normally open (off) at boot
 unsigned long startTime;
 unsigned long chokeOnTime = 10000;    // Stay on for 10 seconds total
 unsigned long ignitionOnTime = 5000;  // Ignition stays on for 5 seconds
-unsigned long chokeReadyDelay = 1500; // Ignition triggered 1500ms after boot
+unsigned long ignitionTriggerDelay = 1500; // Ignition triggered 1500ms after boot
 unsigned long contactorOnTime = 60000; // 60 seconds after boot
+unsigned long engineOffOnTime = 50000; // 50 seconds after button is pressed
+
+bool buttonPressed = false;
+unsigned long buttonPressTime = 0;
 
 void setup() {
   // Initialize the relay pins and the button pin as inputs and outputs
@@ -39,17 +43,23 @@ void setup() {
 void loop() {
   unsigned long currentTime = millis();
 
-  // Check if the button is pressed to turn off the onOffSwitch
-  if (digitalRead(buttonPin) == LOW) {
+  // Check if the button is pressed to start counting engineOffOnTime
+  if (digitalRead(buttonPin) == LOW && !buttonPressed) {
+    buttonPressed = true;
+    buttonPressTime = currentTime;
+  }
+
+  // Turn off the onOffSwitch 50 seconds after the button is pressed
+  if (buttonPressed && (currentTime - buttonPressTime >= engineOffOnTime)) {
     digitalWrite(onOffSwitchPin, HIGH); // Turn off the onOffSwitch
     onOffSwitchState = HIGH;
-  } else {
+  } else if (!buttonPressed) {
     digitalWrite(onOffSwitchPin, LOW); // Keep the onOffSwitch on
     onOffSwitchState = LOW;
   }
 
-  // Turn on the choke at boot
-  if (chokeState == HIGH && currentTime - startTime) {
+  // Turn on the choke after boot
+  if (chokeState == HIGH && currentTime - startTime >= 0) {
     digitalWrite(chokePin, LOW); // Turn on the choke
     chokeState = LOW;
   }
@@ -60,14 +70,14 @@ void loop() {
     chokeState = HIGH;
   }
 
-  // Turn on the ignition 1500ms after the choke is triggered on
-  if (ignitionState == HIGH && currentTime - startTime >= chokeReadyDelay) {
+  // Turn on the ignition 1500ms after boot
+  if (ignitionState == HIGH && currentTime - startTime >= ignitionTriggerDelay) {
     digitalWrite(ignitionPin, LOW); // Turn on the ignition
     ignitionState = LOW;
   }
 
   // Turn off the ignition after 5 seconds
-  if (ignitionState == LOW && currentTime - startTime >= (chokeReadyDelay + ignitionOnTime)) {
+  if (ignitionState == LOW && currentTime - startTime >= (ignitionTriggerDelay + ignitionOnTime)) {
     digitalWrite(ignitionPin, HIGH); // Turn off the ignition
     ignitionState = HIGH;
   }
