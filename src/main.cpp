@@ -1,10 +1,11 @@
 #include <Arduino.h>
+
 // Define the pin numbers for the onOffSwitch, choke, ignition, and contactor
 const int onOffSwitchPin = 16;
 const int chokePin = 14;
 const int ignitionPin = 12;
 const int contactorPin = 13;
-const int buttonPin = 5;
+const int buttonPin = 0;
 
 // Define the relay states and timings
 bool onOffSwitchState = LOW; // On at boot
@@ -23,7 +24,7 @@ bool buttonPressed = false;
 bool chokeTriggered = false;
 bool ignitionTriggered = false;
 unsigned long buttonPressTime = 0;
-int buttonState = 0;
+int buttonState = HIGH;
 
 void setup() {
   // Initialize the relay pins and the button pin as inputs and outputs
@@ -45,12 +46,24 @@ void setup() {
   // Record the start time
   startTime = millis();
 
+  Serial.println("Turning on onOffSwitch.");
+  digitalWrite(onOffSwitchPin, LOW); // Keep the onOffSwitch on
+  onOffSwitchState = LOW;
+  Serial.println("onOffSwitch turned on.");  
+
+  Serial.println("Turning on choke.");
+  digitalWrite(chokePin, LOW); // Turn on the choke
+  chokeState = LOW;
+  chokeTriggered = true;
+  Serial.println("Choke turned on.");
+
   // Serial output to indicate setup complete
   Serial.println("Setup complete.");
 }
 
 void loop() {
   unsigned long currentTime = millis();
+  buttonState = digitalRead(buttonPin);
 
   // Check if the button is pressed to start counting engineOffOnTime
   if (buttonState == LOW && !buttonPressed) {
@@ -67,21 +80,7 @@ void loop() {
       onOffSwitchState = HIGH;
       Serial.println("onOffSwitch turned off.");
     }
-  } else if (!buttonPressed && onOffSwitchState == HIGH) {
-    Serial.println("Turning on onOffSwitch.");
-    digitalWrite(onOffSwitchPin, LOW); // Keep the onOffSwitch on
-    onOffSwitchState = LOW;
-    Serial.println("onOffSwitch turned on.");
-  }
-
-  // Turn on the choke at boot if not already triggered
-  if (!chokeTriggered && currentTime - startTime >= 0) {
-    Serial.println("Turning on choke.");
-    digitalWrite(chokePin, LOW); // Turn on the choke
-    chokeState = LOW;
-    chokeTriggered = true;
-    Serial.println("Choke turned on.");
-  }
+  } 
 
   // Check if it's time to turn off the choke
   if (chokeTriggered && chokeState == LOW && currentTime - startTime >= chokeOnTime) {
@@ -109,7 +108,7 @@ void loop() {
   }
 
   // Check if it's time to turn on the contactor
-  if (currentTime - startTime >= contactorOnTime && buttonState == HIGH) {
+  if (currentTime - startTime >= contactorOnTime && buttonState == HIGH && contactorState == HIGH && onOffSwitchState == LOW) {
     Serial.println("Turning on contactor.");
     digitalWrite(contactorPin, LOW); // Turn on the contactor
     contactorState = LOW;
@@ -120,4 +119,5 @@ void loop() {
     contactorState = HIGH;
     Serial.println("Contactor turned off.");
   }
+  
 }
