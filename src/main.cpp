@@ -4,7 +4,7 @@ const int onOffSwitchPin = 16;
 const int chokePin = 14;
 const int ignitionPin = 12;
 const int contactorPin = 13;
-const int buttonPin = 15;
+const int buttonPin = 5;
 
 // Define the relay states and timings
 bool onOffSwitchState = LOW; // On at boot
@@ -23,6 +23,7 @@ bool buttonPressed = false;
 bool chokeTriggered = false;
 bool ignitionTriggered = false;
 unsigned long buttonPressTime = 0;
+int buttonState = 0;
 
 void setup() {
   // Initialize the relay pins and the button pin as inputs and outputs
@@ -50,11 +51,6 @@ void setup() {
 
 void loop() {
   unsigned long currentTime = millis();
-
-  // Print the current button state for debugging
-  int buttonState = digitalRead(buttonPin);
-  Serial.print("Button state: ");
-  Serial.println(buttonState);
 
   // Check if the button is pressed to start counting engineOffOnTime
   if (buttonState == LOW && !buttonPressed) {
