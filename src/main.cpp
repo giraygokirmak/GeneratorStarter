@@ -15,7 +15,7 @@ bool contactorState = LOW;
 
 unsigned long startTime;
 unsigned long chokeOnTime = 10000;    // Stay on for 10 seconds total
-unsigned long ignitionOnTime = 3000;  // Ignition stays on for 5 seconds
+unsigned long ignitionOnTime = 3000;  // Ignition stays on for 3 seconds
 unsigned long ignitionTriggerDelay = 1500; // Ignition triggered 1500ms after boot
 unsigned long contactorOnTime = 60000; // 60 seconds after boot
 unsigned long engineOffOnTime = 50000; // 50 seconds after button is pressed
