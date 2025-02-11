@@ -2,9 +2,9 @@
 
 // Define the pin numbers for the onOffSwitch, choke, ignition, and contactor
 const int onOffSwitchPin = 16; 
-const int ignitionPin = 12; 
-const int contactorPin = 13;  
-const int mainsPin = 15; 
+const int ignitionPin = 14; 
+const int contactorPin = 12;  
+const int mainsPin = 0; 
 
 // Define the relay states and timings
 bool onOffSwitchState = LOW;
