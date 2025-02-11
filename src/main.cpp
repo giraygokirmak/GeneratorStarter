@@ -15,8 +15,8 @@ unsigned long startTime;
 unsigned long ignitionOnTime = 3000;  // Ignition stays on for 3s
 unsigned long ignitionTriggerDelay = 1000; // Ignition triggered 1s after boot
 unsigned long contactorOnTime = 60000; // 60s after boot
-unsigned long engineOffOnTime = 50000; // 50s after button is pressed
-unsigned long contactorOffOnTime = 3000; // 3s after button is pressed
+unsigned long engineOffOnTime = 45000; // 45s after button is pressed
+unsigned long buttonPressedOnTime = 5000; // 10s after button is pressed
 
 bool buttonPressed = false;
 bool ignitionTriggered = false;
@@ -53,11 +53,20 @@ void loop() {
   unsigned long currentTime = millis();
   buttonState = digitalRead(buttonPin);
 
+  if (buttonState == HIGH) {
+    buttonPressTime=0;
+  }
+
   // Check if the button is pressed to start counting engineOffOnTime
-  if (buttonState == LOW && !buttonPressed) {
-    buttonPressed = true;
+  if (buttonState == LOW && buttonPressTime==0) {
     buttonPressTime = currentTime;
-    Serial.println("Button pressed. Starting engineOffOnTime countdown.");
+    Serial.println("Button pressed. Starting countdown.");
+  }
+
+  if (!buttonPressed && buttonState == LOW && (currentTime - buttonPressTime >= buttonPressedOnTime)) { 
+    buttonPressed=true;
+    buttonPressTime = currentTime;
+    Serial.println("Button pressed countdown finished. Starting engineOffOnTime countdown.");
   }
 
   // Turn off the onOffSwitch 50 seconds after the button is pressed
@@ -71,7 +80,7 @@ void loop() {
   } 
 
   // Turn on the ignition 1500ms after boot if not already triggered
-  if (!ignitionTriggered && currentTime - startTime >= ignitionTriggerDelay && buttonState == HIGH) {
+  if (!buttonPressed && !ignitionTriggered && currentTime - startTime >= ignitionTriggerDelay && buttonState == HIGH) {
     Serial.println("Turning on ignition.");
     digitalWrite(ignitionPin, HIGH); // Turn on the ignition
     ignitionState = HIGH;
@@ -80,7 +89,7 @@ void loop() {
   }
 
   // Turn off the ignition after 5 seconds
-  if (ignitionTriggered && ignitionState == HIGH && currentTime - startTime >= (ignitionTriggerDelay + ignitionOnTime)) {
+  if (!buttonPressed && ignitionTriggered && ignitionState == HIGH && currentTime - startTime >= (ignitionTriggerDelay + ignitionOnTime)) {
     Serial.println("Turning off ignition.");
     digitalWrite(ignitionPin, LOW); // Turn off the ignition
     ignitionState = LOW;
@@ -88,12 +97,12 @@ void loop() {
   }
 
   // Check if it's time to turn on the contactor
-  if (currentTime - startTime >= contactorOnTime && buttonState == HIGH && contactorState == LOW && onOffSwitchState == HIGH) {
+  if (!buttonPressed && currentTime - startTime >= contactorOnTime && buttonState == HIGH && contactorState == LOW && onOffSwitchState == HIGH) {
     Serial.println("Turning on contactor.");
     digitalWrite(contactorPin, HIGH); // Turn on the contactor
     contactorState = HIGH;
     Serial.println("Contactor turned on.");
-  } else if (buttonState == LOW && (currentTime - buttonPressTime >= contactorOffOnTime) && contactorState == HIGH) {
+  } else if (buttonPressed && buttonState == LOW && contactorState == HIGH) {
     Serial.println("Turning off contactor.");
     digitalWrite(contactorPin, LOW); // Turn off the contactor if the button is pressed
     contactorState = LOW;
