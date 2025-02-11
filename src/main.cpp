@@ -14,11 +14,12 @@ bool ignitionState = LOW;
 bool contactorState = LOW;  
 
 unsigned long startTime;
-unsigned long chokeOnTime = 10000;    // Stay on for 10 seconds total
-unsigned long ignitionOnTime = 3000;  // Ignition stays on for 3 seconds
-unsigned long ignitionTriggerDelay = 1500; // Ignition triggered 1500ms after boot
-unsigned long contactorOnTime = 60000; // 60 seconds after boot
-unsigned long engineOffOnTime = 50000; // 50 seconds after button is pressed
+unsigned long chokeOnTime = 6000;    // Stay on for 6s total
+unsigned long ignitionOnTime = 3000;  // Ignition stays on for 3s
+unsigned long ignitionTriggerDelay = 1000; // Ignition triggered 1s after boot
+unsigned long contactorOnTime = 60000; // 60s after boot
+unsigned long engineOffOnTime = 50000; // 50s after button is pressed
+unsigned long contactorOffOnTime = 3000; // 3s after button is pressed
 
 bool buttonPressed = false;
 bool chokeTriggered = false;
@@ -53,9 +54,11 @@ void setup() {
     chokeTriggered = true;
     Serial.println("Choke turned on.");
   }
+
   // Serial output to indicate setup complete
   Serial.println("Setup complete.");
 }
+
 
 void loop() {
   unsigned long currentTime = millis();
@@ -109,7 +112,7 @@ void loop() {
     digitalWrite(contactorPin, HIGH); // Turn on the contactor
     contactorState = HIGH;
     Serial.println("Contactor turned on.");
-  } else if (buttonState == LOW && contactorState == HIGH) {
+  } else if (buttonState == LOW && (currentTime - buttonPressTime >= contactorOffOnTime) && contactorState == HIGH) {
     Serial.println("Turning off contactor.");
     digitalWrite(contactorPin, LOW); // Turn off the contactor if the button is pressed
     contactorState = LOW;
