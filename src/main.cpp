@@ -89,7 +89,7 @@ void loop() {
   }
 
   // Turn off the ignition after 5 seconds
-  if (!buttonPressed && ignitionTriggered && ignitionState == HIGH && currentTime - startTime >= (ignitionTriggerDelay + ignitionOnTime)) {
+  if (ignitionTriggered && ignitionState == HIGH && currentTime - startTime >= (ignitionTriggerDelay + ignitionOnTime)) {
     Serial.println("Turning off ignition.");
     digitalWrite(ignitionPin, LOW); // Turn off the ignition
     ignitionState = LOW;
