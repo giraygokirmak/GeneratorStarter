@@ -5,11 +5,13 @@
 // Define the pin numbers for the onOffSwitch, choke, ignition, and contactor
 const int onOffSwitchPin = 16; 
 const int ignitionPin = 14; 
-const int contactorPin = 12;  
+const int chokePin = 12; 
+const int contactorPin = 13;  
 const int mainsPin = 0; 
 
 // Define the relay states and timings
 bool onOffSwitchState = LOW;
+bool chokeState = LOW;  
 bool ignitionState = LOW;  
 bool contactorState = LOW;  
 bool mainsState = HIGH;
@@ -18,6 +20,7 @@ bool contactorTriggered = false;
 
 unsigned long startTime;
 unsigned long ignitionOnTime = 5000;
+unsigned long chokeOnTime = 10000;
 unsigned long contactorOnTime = 60000;
 
 #define WIFI_SSID "corpse"
@@ -100,10 +103,12 @@ void setup() {
 
   pinMode(onOffSwitchPin, OUTPUT);
   pinMode(ignitionPin, OUTPUT);
+  pinMode(chokePin, OUTPUT);
   pinMode(contactorPin, OUTPUT);
   pinMode(mainsPin, INPUT_PULLUP); 
 
   digitalWrite(onOffSwitchPin, LOW);
+  digitalWrite(chokePin, LOW);
   digitalWrite(ignitionPin, LOW);
   digitalWrite(contactorPin, LOW);  
 
@@ -121,6 +126,10 @@ void setup() {
   Serial.println("Turning on onOffSwitch.");
   digitalWrite(onOffSwitchPin, HIGH); // Keep the onOffSwitch on
   Serial.println("onOffSwitch turned on.");  
+
+  Serial.println("Turning on choke.");
+  digitalWrite(chokePin, HIGH); // Turn on the ignition
+  Serial.println("Choke turned on.");
 
   Serial.println("Turning on ignition.");
   digitalWrite(ignitionPin, HIGH); // Turn on the ignition
@@ -150,6 +159,7 @@ void loop() {
   }
 
   onOffSwitchState = digitalRead(onOffSwitchPin);
+  chokeState = digitalRead(chokePin);
   ignitionState = digitalRead(ignitionPin);
   contactorState = digitalRead(contactorState);
   mainsState = digitalRead(mainsPin);
@@ -160,6 +170,12 @@ void loop() {
     Serial.println("Turning off ignition.");
     digitalWrite(ignitionPin, LOW); // Turn off the ignition
     Serial.println("Ignition turned off.");
+  }
+
+  if (chokeState == HIGH && currentTime - startTime >= chokeOnTime) {
+    Serial.println("Turning off choke.");
+    digitalWrite(chokePin, LOW); // Turn off the choke
+    Serial.println("Choke turned off.");
   }
 
   if (!contactorTriggered && currentTime - startTime >= contactorOnTime && mainsState==HIGH) {
